@@ -4,24 +4,33 @@ import psutil
 # Initialize app
 app = Flask(__name__)
 
-# Route to serve the main and only HTML page
 @app.route('/')
 def index():
-    return render_template('index.html')  # 'index.html' is in the 'templates' folder
+    return render_template('index.html')
 
-# API to get system usage data (Total CPU usage, no per-core breakdown)
+# Route to get system data (already working)
 @app.route('/api/data')
 def get_system_data():
-    # Get total CPU usage across all cores
-    total_cpu_usage = psutil.cpu_percent(interval=1, percpu=False)
-
-    # Get memory usage
+    cpu_usage = psutil.cpu_percent(interval=1)
     memory_usage = psutil.virtual_memory().percent
+    return jsonify({'cpu_usage': cpu_usage, 'memory_usage': memory_usage})
 
-    return jsonify({
-        'cpu_usage': total_cpu_usage,  # Total CPU usage (across all cores)
-        'memory_usage': memory_usage,  # Memory usage
-    })
+@app.route('/api/processes')
+def get_top_processes():
+    processes = []
+    
+    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+        try:
+            proc_info = proc.info
+            proc_info['memory_percent'] = round(proc.memory_percent(), 2)  # Use psutil's memory_percent method
+            processes.append(proc_info)
+        except psutil.NoSuchProcess:
+            pass
+    
+    # Sort by CPU usage and limit to top 5 processes
+    top_cpu_processes = sorted(processes, key=lambda p: p['cpu_percent'], reverse=True)[:5]
+    
+    return jsonify(top_cpu_processes)
 
 if __name__ == '__main__':
     app.run(debug=True)
