@@ -28,6 +28,12 @@
             text-align: center;
             margin-bottom: 20px;
         }
+
+        .usage-info {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: -10px;  /* Slight overlap with the chart */
+        }
     </style>
 </head>
 <body>
@@ -35,7 +41,16 @@
     <h1>System Monitoring Dashboard</h1>
 
     <div class="chart-container">
+        <!-- Display CPU usage percentage above the CPU chart -->
+        <div class="usage-info">
+            CPU Usage: <span id="cpuUsageText">0%</span>
+        </div>
         <canvas id="cpuChart"></canvas>
+
+        <!-- Display Memory usage percentage above the Memory chart -->
+        <div class="usage-info">
+            Memory Usage: <span id="memoryUsageText">0%</span>
+        </div>
         <canvas id="memoryChart"></canvas>
     </div>
 
@@ -96,6 +111,10 @@
 
             memoryChart.data.labels.push(now);
             memoryChart.data.datasets[0].data.push(data.memory_usage);
+
+            // Update the CPU and Memory usage text above the charts
+            document.getElementById('cpuUsageText').textContent = `${data.cpu_usage}%`;
+            document.getElementById('memoryUsageText').textContent = `${data.memory_usage}%`;
 
             // Limit the number of points to display (e.g., last 20 points)
             [cpuChart, memoryChart].forEach(chart => {
